@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Reset">
+<title>Reset</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(145deg,#eef4ff,#f9efff 48%,#edfff8);color:#1c1c1e;min-height:100vh}
+main{max-width:620px;margin:auto;padding:calc(18px + env(safe-area-inset-top)) 16px calc(30px + env(safe-area-inset-bottom))}
+.hero{padding:12px 4px 8px}
+h1{font-size:38px;margin:4px 0;background:linear-gradient(90deg,#5b5ce2,#c34fd4);-webkit-background-clip:text;color:transparent}
+h2{margin-top:4px}.muted{color:#666}
+.card{background:#ffffffee;backdrop-filter:blur(10px);border-radius:22px;padding:20px;margin:13px 0;box-shadow:0 5px 20px #5b5ce21a;border:1px solid #ffffff}
+.streakCard{background:linear-gradient(135deg,#e9e8ff,#f9e8ff)}
+.days{font-size:50px;font-weight:800;margin:8px 0;color:#5b5ce2}
+.badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#fff;color:#5b5ce2;font-weight:700;font-size:13px}
+button{width:100%;padding:15px;margin-top:9px;border:0;border-radius:14px;background:linear-gradient(90deg,#5b5ce2,#9b51e0);color:#fff;font-size:17px;font-weight:700;box-shadow:0 4px 12px #5b5ce233}
+button.secondary{background:#e9e7f7;color:#3e3b67;box-shadow:none}
+button.encourage{background:linear-gradient(90deg,#ff7a59,#e94fa8)}
+#timer{text-align:center;font-size:50px;font-weight:800;color:#5b5ce2;font-variant-numeric:tabular-nums;margin:12px}
+textarea{width:100%;border:1px solid #d5d2e8;border-radius:13px;padding:12px;font:inherit;resize:vertical;background:#fafaff}
+li{margin:9px 0}label{display:block;margin:12px 0;font-size:16px}
+input[type=checkbox]{width:20px;height:20px;vertical-align:middle;margin-right:8px;accent-color:#695ee8}
+.quote{min-height:48px;font-size:19px;font-weight:650;line-height:1.35;margin:14px 2px}
+.notice{background:#fff8d8;border-radius:14px;padding:13px}
+.small{font-size:13px}
+</style>
+<link rel="manifest" href="manifest.json"></head>
+<body>
+<main>
+<h1>Reset</h1>
+<p class="muted">Your private tool for staying on track.</p>
+
+<div class="card">
+<h2>Streak</h2>
+<div class="days" id="days">0 days</div>
+<p id="started" class="muted">No streak started yet.</p>
+<button onclick="startStreak()">Start / restart streak</button>
+</div>
+
+<div class="card">
+<h2>Urge reset</h2>
+<p>Focus only on getting through the next five minutes.</p>
+<div id="timer">05:00</div>
+<button onclick="startTimer()">Start 5-minute timer</button>
+<button class="secondary" onclick="stopTimer()">Reset timer</button>
+<ul>
+<li>Leave the room or change locations.</li>
+<li>Put your phone somewhere you cannot immediately reach it.</li>
+<li>Get water and move around.</li>
+<li>Start a different activity.</li>
+</ul>
+</div>
+
+<div class="card">
+<h2>⚡ Need a boost?</h2>
+<p class="quote" id="encouragement">You don't have to win forever. Just make the next good choice.</p>
+<button class="encourage" onclick="encourage()">Give me encouragement</button>
+</div>
+
+<div class="card">
+<h2>Quick check-in</h2>
+<label><input type="checkbox" id="move"> I changed locations.</label>
+<label><input type="checkbox" id="phone"> I put my phone away.</label>
+<label><input type="checkbox" id="activity"> I started another activity.</label>
+<button onclick="checkIn()">Complete check-in</button>
+<p id="checkMsg" class="muted"></p>
+</div>
+
+<div class="card">
+<h2>My reason</h2>
+<textarea id="reason" rows="4" placeholder="Why do I want to quit?"></textarea>
+<button onclick="saveReason()">Save</button>
+<p id="saveMsg" class="muted"></p>
+</div>
+
+<div class="card">
+<h2>If you slip</h2>
+<p>Don't treat one setback as failure. Restart the streak, identify what triggered it, and continue.</p>
+</div>
+
+<div class="notice small">
+<strong>iPhone tip:</strong> For the most reliable behavior, open this file in Safari and use <strong>Share → Add to Home Screen</strong>. Keep the original HTML file in Files as a backup.
+</div>
+</main>
+
+<script>
+const KEY="reset_v2";
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){return {}}}
+function save(data){try{localStorage.setItem(KEY,JSON.stringify(data));return true}catch(e){return false}}
+function update(){
+ const d=load(), el=document.getElementById("days"), st=document.getElementById("started");
+ if(!d.start){el.textContent="0 days";st.textContent="No streak started yet.";return}
+ const n=Math.max(0,Math.floor((Date.now()-d.start)/86400000));
+ el.textContent=n+" day"+(n===1?"":"s");
+ st.textContent="Started "+new Date(d.start).toLocaleString();
+}
+function startStreak(){
+ const encouragements=[
+"You are in control of your next decision.",
+"An urge is temporary. Your goal is bigger than a temporary feeling.",
+"Five minutes at a time. Keep moving forward.",
+"You don't need perfect days. You need to keep choosing your goal.",
+"Put the phone down, change rooms, and reset.",
+"Future you will be glad you stayed committed.",
+"One good decision right now is enough.",
+"Keep going. A setback doesn't erase your progress."
+];
+function encourage(){
+ const i=Math.floor(Math.random()*encouragements.length);
+ document.getElementById("encouragement").textContent=encouragements[i];
+}
+const d=load(); d.start=Date.now(); save(d); update();
+}
+function saveReason(){
+ const encouragements=[
+"You are in control of your next decision.",
+"An urge is temporary. Your goal is bigger than a temporary feeling.",
+"Five minutes at a time. Keep moving forward.",
+"You don't need perfect days. You need to keep choosing your goal.",
+"Put the phone down, change rooms, and reset.",
+"Future you will be glad you stayed committed.",
+"One good decision right now is enough.",
+"Keep going. A setback doesn't erase your progress."
+];
+function encourage(){
+ const i=Math.floor(Math.random()*encouragements.length);
+ document.getElementById("encouragement").textContent=encouragements[i];
+}
+const d=load(); d.reason=document.getElementById("reason").value; 
+ if(save(d)) document.getElementById("saveMsg").textContent="Saved on this iPhone.";
+}
+function checkIn(){
+ const encouragements=[
+"You are in control of your next decision.",
+"An urge is temporary. Your goal is bigger than a temporary feeling.",
+"Five minutes at a time. Keep moving forward.",
+"You don't need perfect days. You need to keep choosing your goal.",
+"Put the phone down, change rooms, and reset.",
+"Future you will be glad you stayed committed.",
+"One good decision right now is enough.",
+"Keep going. A setback doesn't erase your progress."
+];
+function encourage(){
+ const i=Math.floor(Math.random()*encouragements.length);
+ document.getElementById("encouragement").textContent=encouragements[i];
+}
+const d=load(); d.checkins=(d.checkins||0)+1; d.lastCheckIn=Date.now(); save(d);
+ document.getElementById("checkMsg").textContent="Check-in saved. Keep going.";
+}
+let remaining=300,timer=null;
+function render(){document.getElementById("timer").textContent=String(Math.floor(remaining/60)).padStart(2,"0")+":"+String(remaining%60).padStart(2,"0")}
+function startTimer(){
+ clearInterval(timer); remaining=300; render();
+ timer=setInterval(()=>{remaining--;render();if(remaining<=0){clearInterval(timer);document.getElementById("timer").textContent="5:00 complete.";navigator.vibrate?.(200)}},1000);
+}
+function stopTimer(){clearInterval(timer);remaining=300;render()}
+const encouragements=[
+"You are in control of your next decision.",
+"An urge is temporary. Your goal is bigger than a temporary feeling.",
+"Five minutes at a time. Keep moving forward.",
+"You don't need perfect days. You need to keep choosing your goal.",
+"Put the phone down, change rooms, and reset.",
+"Future you will be glad you stayed committed.",
+"One good decision right now is enough.",
+"Keep going. A setback doesn't erase your progress."
+];
+function encourage(){
+ const i=Math.floor(Math.random()*encouragements.length);
+ document.getElementById("encouragement").textContent=encouragements[i];
+}
+const d=load(); if(d.reason)document.getElementById("reason").value=d.reason;
+update();render();setInterval(update,60000);
+</script>
+</body>
+</html>
